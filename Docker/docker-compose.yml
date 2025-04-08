@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: fodeliapp-app
+    restart: unless-stopped
+    volumes:
+      - ./app:/var/www
+    networks:
+      - fodeliapp-network
+    depends_on:
+      - database
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: fodeliapp-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./app:/var/www
+    networks:
+      - fodeliapp-network
+    depends_on:
+      - app
+
+  database:
+    image: mysql:8.0
+    container_name: fodeliapp-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+    volumes:
+      - fodeliapp-data:/var/lib/mysql
+    networks:
+      - fodeliapp-network
+
+networks:
+  fodeliapp-network:
+    driver: bridge
+
+volumes:
+  fodeliapp-data:
+    driver: local
